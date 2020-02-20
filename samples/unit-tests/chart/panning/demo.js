@@ -28,11 +28,11 @@ QUnit.test('Panning inverted chart(#4077)', function (assert) {
                 animation: false
             }]
         }),
+        controller = new TestController(chart),
         firstZoom = {};
 
     chart.container.parentNode.style.position = 'absolute';
     chart.container.parentNode.style.top = 0;
-
 
     assert.strictEqual(
         chart.xAxis[0].min,
@@ -47,19 +47,7 @@ QUnit.test('Panning inverted chart(#4077)', function (assert) {
 
 
     // Zoom
-    chart.pointer.onContainerMouseDown({
-        type: 'mousedown',
-        pageX: 200,
-        pageY: 150,
-        target: chart.container
-    });
-    chart.pointer.onContainerMouseMove({
-        type: 'mousemove',
-        pageX: 200,
-        pageY: 200,
-        target: chart.container
-    });
-    chart.pointer.onDocumentMouseUp({});
+    controller.pan([200, 150], [200, 200]);
 
     assert.strictEqual(
         chart.xAxis[0].min > 0,
@@ -75,22 +63,7 @@ QUnit.test('Panning inverted chart(#4077)', function (assert) {
     firstZoom = chart.xAxis[0].getExtremes();
 
     // Pan
-    chart.pointer.onContainerMouseDown({
-        type: 'mousedown',
-        pageX: 200,
-        pageY: 100,
-        target: chart.container,
-        shiftKey: true
-    });
-    chart.pointer.onContainerMouseMove({
-        type: 'mousemove',
-        pageX: 200,
-        pageY: 50,
-        target: chart.container,
-        shiftKey: true
-    });
-    chart.pointer.onDocumentMouseUp({
-    });
+    controller.pan([200, 100], [200, 50], { shiftKey: true });
 
     assert.strictEqual(
         chart.xAxis[0].min > firstZoom.min,
@@ -102,7 +75,6 @@ QUnit.test('Panning inverted chart(#4077)', function (assert) {
         (firstZoom.max - firstZoom.min).toFixed(2),
         'Has preserved range'
     );
-
 
     chart.container.parentNode.style.position = 'static';
 

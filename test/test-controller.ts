@@ -6,6 +6,18 @@
 
 /* *
  *
+ *  Constants
+ *
+ * */
+
+enum MouseButtons {
+    left = 0,
+    middle = 1,
+    right = 2
+}
+
+/* *
+ *
  *  Types
  *
  * */
@@ -978,7 +990,7 @@ class TestController {
         type: string,
         chartX: number = this.positionX,
         chartY: number = this.positionY,
-        extra: any = undefined,
+        extra: any = void 0,
         debug: boolean = false
     ) {
 
@@ -996,11 +1008,22 @@ class TestController {
         (evt as any).pageX = (chartOffset.left + chartX);
         (evt as any).pageY = (chartOffset.top + chartY);
 
-        if (extra) {
-            Object.keys(extra).forEach(function (key) {
-                (evt as any)[key] = extra[key];
-            });
+        extra = (extra || {});
+
+        switch (type) {
+            case 'click':
+            case 'dblclick':
+            case 'mousedown':
+            case 'mouseup':
+                if (typeof extra.button === 'undefined') {
+                    extra.button = MouseButtons.left;
+                }
+                break;
         }
+
+        Object.keys(extra).forEach(function (key) {
+            (evt as any)[key] = extra[key];
+        });
 
         // Leave marks for debugging
         if (debug) {

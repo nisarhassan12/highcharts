@@ -1345,12 +1345,16 @@ class Pointer {
         // Normalize before the 'if' for the legacy IE (#7850)
         e = this.normalize(e);
 
-        if ((e as any).button !== 2) {
+        if (
+            typeof e.button === 'undefined' ||
+            e.button === 0 // #11635, limiting to primary button
+        ) {
 
             this.zoomOption(e);
 
-            // issue #295, dragging not always working in Firefox
-            if (e.preventDefault) {
+            // #295, dragging not always working in Firefox
+            // #11635, limit condition to Firefox
+            if (H.isFirefox) {
                 e.preventDefault();
             }
 

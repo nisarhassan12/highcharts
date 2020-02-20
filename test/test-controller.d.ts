@@ -3,6 +3,11 @@
  *  Copyright (c) Highsoft AS. All rights reserved.
  *
  *!*/
+declare enum MouseButtons {
+    left = 0,
+    middle = 1,
+    right = 2
+}
 /**
  * DOM elements
  */

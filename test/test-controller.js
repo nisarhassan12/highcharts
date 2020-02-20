@@ -5,6 +5,17 @@
  *!*/
 /* *
  *
+ *  Constants
+ *
+ * */
+var MouseButtons;
+(function (MouseButtons) {
+    MouseButtons[MouseButtons["left"] = 0] = "left";
+    MouseButtons[MouseButtons["middle"] = 1] = "middle";
+    MouseButtons[MouseButtons["right"] = 2] = "right";
+})(MouseButtons || (MouseButtons = {}));
+/* *
+ *
  *  Classes
  *
  * */
@@ -743,7 +754,7 @@ var TestController = /** @class */ (function () {
     TestController.prototype.triggerEvent = function (type, chartX, chartY, extra, debug) {
         if (chartX === void 0) { chartX = this.positionX; }
         if (chartY === void 0) { chartY = this.positionY; }
-        if (extra === void 0) { extra = undefined; }
+        if (extra === void 0) { extra = void 0; }
         if (debug === void 0) { debug = false; }
         var chartOffset = Highcharts.offset(this.chart.container);
         var evt = (document.createEvent ?
@@ -754,11 +765,20 @@ var TestController = /** @class */ (function () {
         }
         evt.pageX = (chartOffset.left + chartX);
         evt.pageY = (chartOffset.top + chartY);
-        if (extra) {
-            Object.keys(extra).forEach(function (key) {
-                evt[key] = extra[key];
-            });
+        extra = (extra || {});
+        switch (type) {
+            case 'click':
+            case 'dblclick':
+            case 'mousedown':
+            case 'mouseup':
+                if (typeof extra.button === 'undefined') {
+                    extra.button = MouseButtons.left;
+                }
+                break;
         }
+        Object.keys(extra).forEach(function (key) {
+            evt[key] = extra[key];
+        });
         // Leave marks for debugging
         if (debug) {
             var marker = this.chart.renderer
