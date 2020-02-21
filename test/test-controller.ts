@@ -6,18 +6,6 @@
 
 /* *
  *
- *  Constants
- *
- * */
-
-enum MouseButtons {
-    left = 0,
-    middle = 1,
-    right = 2
-}
-
-/* *
- *
  *  Types
  *
  * */
@@ -1016,7 +1004,7 @@ class TestController {
             case 'mousedown':
             case 'mouseup':
                 if (typeof extra.button === 'undefined') {
-                    extra.button = MouseButtons.left;
+                    extra.button = TestController.MouseButtons.left;
                 }
                 break;
         }
@@ -1063,4 +1051,20 @@ class TestController {
             element.dispatchEvent(evt);
         }
     }
+}
+
+namespace TestController {
+
+    /* *
+     *
+     *  Enums
+     *
+     * */
+
+    export enum MouseButtons {
+        left = 0,
+        middle = 1,
+        right = 2
+    }
+
 }

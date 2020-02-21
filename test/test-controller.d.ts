@@ -3,11 +3,6 @@
  *  Copyright (c) Highsoft AS. All rights reserved.
  *
  *!*/
-declare enum MouseButtons {
-    left = 0,
-    middle = 1,
-    right = 2
-}
 /**
  * DOM elements
  */
@@ -442,4 +437,11 @@ declare class TestController {
      *        test result.
      */
     triggerEvent(type: string, chartX?: number, chartY?: number, extra?: any, debug?: boolean): void;
+}
+declare namespace TestController {
+    enum MouseButtons {
+        left = 0,
+        middle = 1,
+        right = 2
+    }
 }

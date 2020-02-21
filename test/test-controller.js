@@ -5,17 +5,6 @@
  *!*/
 /* *
  *
- *  Constants
- *
- * */
-var MouseButtons;
-(function (MouseButtons) {
-    MouseButtons[MouseButtons["left"] = 0] = "left";
-    MouseButtons[MouseButtons["middle"] = 1] = "middle";
-    MouseButtons[MouseButtons["right"] = 2] = "right";
-})(MouseButtons || (MouseButtons = {}));
-/* *
- *
  *  Classes
  *
  * */
@@ -772,7 +761,7 @@ var TestController = /** @class */ (function () {
             case 'mousedown':
             case 'mouseup':
                 if (typeof extra.button === 'undefined') {
-                    extra.button = MouseButtons.left;
+                    extra.button = TestController.MouseButtons.left;
                 }
                 break;
         }
@@ -808,3 +797,16 @@ var TestController = /** @class */ (function () {
     };
     return TestController;
 }());
+(function (TestController) {
+    /* *
+     *
+     *  Enums
+     *
+     * */
+    var MouseButtons;
+    (function (MouseButtons) {
+        MouseButtons[MouseButtons["left"] = 0] = "left";
+        MouseButtons[MouseButtons["middle"] = 1] = "middle";
+        MouseButtons[MouseButtons["right"] = 2] = "right";
+    })(MouseButtons = TestController.MouseButtons || (TestController.MouseButtons = {}));
+})(TestController || (TestController = {}));
