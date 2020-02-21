@@ -1345,6 +1345,8 @@ class Pointer {
         // Normalize before the 'if' for the legacy IE (#7850)
         e = this.normalize(e);
 
+        this.onContainerMouseMove(e);
+
         if (
             typeof e.button === 'undefined' ||
             e.button === 0 // #11635, limiting to primary button
