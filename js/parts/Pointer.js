@@ -772,7 +772,7 @@ var Pointer = /** @class */ (function () {
      *
      * @function Highcharts.Pointer#normalize
      *
-     * @param {global.PointerEvent|global.TouchEvent} e
+     * @param {global.MouseEvent|global.PointerEvent|global.TouchEvent} e
      *        Event object in standard browsers.
      *
      * @param {Highcharts.OffsetObject} [chartPosition]
@@ -1417,17 +1417,21 @@ var Pointer = /** @class */ (function () {
     Pointer.prototype.setDOMEvents = function () {
         var pointer = this, container = pointer.chart.container, ownerDoc = container.ownerDocument;
         container.onmousedown = function (e) {
-            pointer.onContainerMouseDown(e);
+            pointer.onContainerMouseDown(pointer.normalize(e));
         };
         container.onmousemove = function (e) {
-            pointer.onContainerMouseMove(e);
+            pointer.onContainerMouseMove(pointer.normalize(e));
         };
         container.onclick = function (e) {
-            pointer.onContainerClick(e);
+            pointer.onContainerClick(pointer.normalize(e));
         };
-        this.unbindContainerMouseLeave = addEvent(container, 'mouseleave', pointer.onContainerMouseLeave);
+        this.unbindContainerMouseLeave = addEvent(container, 'mouseleave', function (e) {
+            pointer.onContainerMouseLeave(e);
+        });
         if (!H.unbindDocumentMouseUp) {
-            H.unbindDocumentMouseUp = addEvent(ownerDoc, 'mouseup', pointer.onDocumentMouseUp);
+            H.unbindDocumentMouseUp = addEvent(ownerDoc, 'mouseup', function (e) {
+                pointer.onDocumentMouseUp(e);
+            });
         }
         if (H.hasTouch) {
             addEvent(container, 'touchstart', function (e) {
@@ -1437,7 +1441,9 @@ var Pointer = /** @class */ (function () {
                 pointer.onContainerTouchMove(e);
             });
             if (!H.unbindDocumentTouchEnd) {
-                H.unbindDocumentTouchEnd = addEvent(ownerDoc, 'touchend', pointer.onDocumentTouchEnd);
+                H.unbindDocumentTouchEnd = addEvent(ownerDoc, 'touchend', function (e) {
+                    pointer.onDocumentTouchEnd(e);
+                });
             }
         }
     };

@@ -1238,7 +1238,7 @@ class Pointer {
      *
      * @function Highcharts.Pointer#normalize
      *
-     * @param {global.PointerEvent|global.TouchEvent} e
+     * @param {global.MouseEvent|global.PointerEvent|global.TouchEvent} e
      *        Event object in standard browsers.
      *
      * @param {Highcharts.OffsetObject} [chartPosition]
@@ -1248,7 +1248,7 @@ class Pointer {
      *         A browser event with extended properties `chartX` and `chartY`.
      */
     public normalize<T extends Highcharts.PointerEventObject>(
-        e: (T|PointerEvent|TouchEvent),
+        e: (T|MouseEvent|PointerEvent|TouchEvent),
         chartPosition?: Highcharts.OffsetObject
     ): T {
         const touches = (e as TouchEvent).touches;
@@ -2164,46 +2164,52 @@ class Pointer {
             ownerDoc = container.ownerDocument;
 
         container.onmousedown = function (e: MouseEvent): void {
-            pointer.onContainerMouseDown(e as any);
+            pointer.onContainerMouseDown(pointer.normalize(e));
         };
         container.onmousemove = function (e: MouseEvent): void {
-            pointer.onContainerMouseMove(e as any);
+            pointer.onContainerMouseMove(pointer.normalize(e));
         };
         container.onclick = function (e: MouseEvent): void {
-            pointer.onContainerClick(e as any);
+            pointer.onContainerClick(pointer.normalize(e));
         };
         this.unbindContainerMouseLeave = addEvent(
             container,
             'mouseleave',
-            pointer.onContainerMouseLeave as any
+            function (e: Highcharts.PointerEventObject): void {
+                pointer.onContainerMouseLeave(e);
+            }
         );
         if (!H.unbindDocumentMouseUp) {
             H.unbindDocumentMouseUp = addEvent(
                 ownerDoc,
                 'mouseup',
-                pointer.onDocumentMouseUp as any
+                function (e: Highcharts.PointerEventObject): void {
+                    pointer.onDocumentMouseUp(e);
+                }
             );
         }
         if (H.hasTouch) {
             addEvent(
                 container,
                 'touchstart',
-                function (e: TouchEvent): void {
-                    pointer.onContainerTouchStart(e as any);
+                function (e: Highcharts.PointerEventObject): void {
+                    pointer.onContainerTouchStart(e);
                 }
             );
             addEvent(
                 container,
                 'touchmove',
-                function (e: TouchEvent): void {
-                    pointer.onContainerTouchMove(e as any);
+                function (e: Highcharts.PointerEventObject): void {
+                    pointer.onContainerTouchMove(e);
                 }
             );
             if (!H.unbindDocumentTouchEnd) {
                 H.unbindDocumentTouchEnd = addEvent(
                     ownerDoc,
                     'touchend',
-                    pointer.onDocumentTouchEnd as any
+                    function (e: Highcharts.PointerEventObject): void {
+                        pointer.onDocumentTouchEnd(e);
+                    }
                 );
             }
         }

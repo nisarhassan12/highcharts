@@ -294,7 +294,7 @@ TrackerMixin = H.TrackerMixin = {
             renderer = chart.renderer,
             snap = (chart.options.tooltip as any).snap,
             tracker = series.tracker,
-            i,
+            i: number,
             onMouseOver = function (e: Highcharts.PointerEventObject): void {
 
                 pointer.normalize(e);
