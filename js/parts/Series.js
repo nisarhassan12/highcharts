@@ -225,16 +225,14 @@ import H from './Globals.js';
  *
  * @typedef {"hover"|"inactive"|"normal"|"select"} Highcharts.SeriesStateValue
  */
-import pointModule from './Point.js';
-var Point = pointModule.Point;
+''; // detach doclets above
+import LegendSymbolMixin from '../mixins/legend-symbol.js';
+import Point from './Point.js';
 import U from './Utilities.js';
 var addEvent = U.addEvent, animObject = U.animObject, arrayMax = U.arrayMax, arrayMin = U.arrayMin, clamp = U.clamp, correctFloat = U.correctFloat, defined = U.defined, erase = U.erase, error = U.error, extend = U.extend, find = U.find, fireEvent = U.fireEvent, getNestedProperty = U.getNestedProperty, isArray = U.isArray, isFunction = U.isFunction, isNumber = U.isNumber, isString = U.isString, merge = U.merge, objectEach = U.objectEach, pick = U.pick, removeEvent = U.removeEvent, seriesType = U.seriesType, splat = U.splat, syncTimeout = U.syncTimeout;
 import './Options.js';
-import './Legend.js';
-import './Point.js';
 import './SvgRenderer.js';
-var defaultOptions = H.defaultOptions, defaultPlotOptions = H.defaultPlotOptions, LegendSymbolMixin = H.LegendSymbolMixin, // @todo add as a requirement
-seriesTypes = H.seriesTypes, SVGElement = H.SVGElement, win = H.win;
+var defaultOptions = H.defaultOptions, defaultPlotOptions = H.defaultPlotOptions, seriesTypes = H.seriesTypes, SVGElement = H.SVGElement, win = H.win;
 /**
  * This is the base series prototype that all other series types inherit from.
  * A new series is initialized either through the
@@ -1690,7 +1688,6 @@ null,
      * @sample {highcharts} highcharts/css/series-datalabels
      *         Style mode example
      *
-     * @declare Highcharts.DataLabelsOptionsObject
      * @type    {*|Array<*>}
      * @product highcharts highstock highmaps gantt
      *
@@ -1915,7 +1912,7 @@ null,
          */
         formatter: function () {
             var numberFormatter = this.series.chart.numberFormatter;
-            return this.y === null ? '' : numberFormatter(this.y, -1);
+            return typeof this.y !== 'number' ? '' : numberFormatter(this.y, -1);
         },
         /**
          * For points with an extent, like columns or map areas, whether to
@@ -4072,25 +4069,31 @@ null,
                 options.yAxis
             ].join(','), // #4526
         clipRect = chart[sharedClipKey], markerClipRect = chart[sharedClipKey + 'm'];
+        if (animation) {
+            clipBox.width = 0;
+            if (inverted) {
+                clipBox.x = chart.plotHeight +
+                    (options.clip !== false ? 0 : chart.plotTop);
+            }
+        }
         // If a clipping rectangle with the same properties is currently
         // present in the chart, use that.
         if (!clipRect) {
             // When animation is set, prepare the initial positions
             if (animation) {
-                clipBox.width = 0;
-                if (inverted) {
-                    clipBox.x = chart.plotSizeX +
-                        (options.clip !== false ? 0 : chart.plotTop);
-                }
                 chart[sharedClipKey + 'm'] = markerClipRect =
                     renderer.clipRect(
                     // include the width of the first marker
                     inverted ? chart.plotSizeX + 99 : -99, inverted ? -chart.plotLeft : -chart.plotTop, 99, inverted ? chart.chartWidth : chart.chartHeight);
             }
-            chart[sharedClipKey] = clipRect =
-                renderer.clipRect(clipBox);
+            chart[sharedClipKey] = clipRect = renderer.clipRect(clipBox);
             // Create hashmap for series indexes
             clipRect.count = { length: 0 };
+            // When the series is rendered again before starting animating, in
+            // compliance to a responsive rule
+        }
+        else if (!chart.hasLoaded) {
+            clipRect.attr(clipBox);
         }
         if (animation) {
             if (!clipRect.count[this.index]) {
@@ -4140,25 +4143,25 @@ null,
     animate: function (init) {
         var series = this, chart = series.chart, animation = animObject(series.options.animation), clipRect, sharedClipKey, finalBox;
         // Initialize the animation. Set up the clipping rectangle.
-        if (init) {
-            series.setClip(animation);
-            // Run the animation
-        }
-        else {
-            sharedClipKey = this.sharedClipKey;
-            clipRect = chart[sharedClipKey];
-            finalBox = series.getClipBox(animation, true);
-            if (clipRect) {
-                clipRect.animate(finalBox, animation);
+        if (!chart.hasRendered) {
+            if (init) {
+                series.setClip(animation);
+                // Run the animation
             }
-            if (chart[sharedClipKey + 'm']) {
-                chart[sharedClipKey + 'm'].animate({
-                    width: finalBox.width + 99,
-                    x: finalBox.x - (chart.inverted ? 0 : 99)
-                }, animation);
+            else {
+                sharedClipKey = this.sharedClipKey;
+                clipRect = chart[sharedClipKey];
+                finalBox = series.getClipBox(animation, true);
+                if (clipRect) {
+                    clipRect.animate(finalBox, animation);
+                }
+                if (chart[sharedClipKey + 'm']) {
+                    chart[sharedClipKey + 'm'].animate({
+                        width: finalBox.width + 99,
+                        x: finalBox.x - (chart.inverted ? 0 : 99)
+                    }, animation);
+                }
             }
-            // Delete this function to allow it only once
-            series.animate = null;
         }
     },
     /**
@@ -4908,7 +4911,7 @@ null,
         var series = this, chart = series.chart, group, options = series.options, 
         // Animation doesn't work in IE8 quirks when the group div is
         // hidden, and looks bad in other oldIE
-        animDuration = (!!series.animate &&
+        animDuration = (!series.finishedAnimating &&
             chart.renderer.isSVG &&
             animObject(options.animation).duration), visibility = series.visible ? 'inherit' : 'hidden', // #2597
         zIndex = options.zIndex, hasRendered = series.hasRendered, chartSeriesGroup = chart.seriesGroup, inverted = chart.inverted;
@@ -4917,7 +4920,7 @@ null,
         group = series.plotGroup('group', 'series', visibility, zIndex, chartSeriesGroup);
         series.markerGroup = series.plotGroup('markerGroup', 'markers', visibility, zIndex, chartSeriesGroup);
         // initiate the animation
-        if (animDuration) {
+        if (animDuration && series.animate) {
             series.animate(true);
         }
         // SVGRenderer needs to know this before drawing elements (#1089,
@@ -4962,7 +4965,7 @@ null,
             group.clip(chart.clipRect);
         }
         // Run the animation
-        if (animDuration) {
+        if (animDuration && series.animate) {
             series.animate();
         }
         // Call the afterAnimate function on animation complete (but don't
@@ -5322,7 +5325,7 @@ null,
  * @sample highcharts/point/datalabels/
  *         Show a label for the last value
  *
- * @declare   Highcharts.DataLabelsOptionsObject
+ * @declare   Highcharts.DataLabelsOptions
  * @extends   plotOptions.line.dataLabels
  * @product   highcharts highstock gantt
  * @apioption series.line.data.dataLabels

@@ -85,8 +85,8 @@ declare global {
             ): SVGAttributes;
             findAlignments(
                 angle: number,
-                options: DataLabelsOptionsObject,
-            ): DataLabelsOptionsObject;
+                options: DataLabelsOptions,
+            ): DataLabelsOptions;
             searchPointByAngle(e: PointerEventObject): (Point|undefined);
             translate(): void;
             toXY(point: Point): void;
@@ -116,6 +116,7 @@ const {
     wrap
 } = U;
 
+import Pane from '../parts-more/Pane.js';
 import '../parts/Pointer.js';
 import '../parts/Series.js';
 import '../parts/Pointer.js';
@@ -598,8 +599,6 @@ var polarAnimate = function (
                                 }, series.options.animation);
                             }
                         });
-                        // Delete this function to allow it only once
-                        series.animate = null as any;
                     }
                 } else {
                     // Initialize the animation
@@ -627,8 +626,6 @@ var polarAnimate = function (
                         if (markerGroup) {
                             markerGroup.animate(attribs, animation);
                         }
-                        // Delete this function to allow it only once
-                        series.animate = null as any;
                     }
                 }
             }
@@ -907,8 +904,8 @@ if (seriesTypes.column) {
     colProto.findAlignments = function (
         this: Highcharts.PolarSeries,
         angle: number,
-        options: Highcharts.DataLabelsOptionsObject
-    ): Highcharts.DataLabelsOptionsObject {
+        options: Highcharts.DataLabelsOptions
+    ): Highcharts.DataLabelsOptions {
         var align: Highcharts.AlignValue,
             verticalAlign: Highcharts.VerticalAlignValue;
 
@@ -950,7 +947,7 @@ if (seriesTypes.column) {
         proceed: Function,
         point: (Highcharts.ColumnPoint | Highcharts.PolarPoint),
         dataLabel: Highcharts.SVGElement,
-        options: Highcharts.DataLabelsOptionsObject,
+        options: Highcharts.DataLabelsOptions,
         alignTo: Highcharts.BBoxObject,
         isNew?: boolean
     ): void {
@@ -1109,7 +1106,7 @@ addEvent(H.Chart, 'getAxes', function (this: Highcharts.Chart): void {
     splat(this.options.pane).forEach(function (
         paneOptions: Highcharts.PaneOptions
     ): void {
-        new H.Pane( // eslint-disable-line no-new
+        new Pane( // eslint-disable-line no-new
             paneOptions,
             this
         );
