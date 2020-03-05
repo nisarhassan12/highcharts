@@ -872,12 +872,18 @@ var Pointer = /** @class */ (function () {
      * @return {void}
      */
     Pointer.prototype.onContainerMouseLeave = function (e) {
-        var chart = charts[H.hoverChartIndex];
+        var chart = charts[H.hoverChartIndex || -1];
+        var tooltip = this.chart.tooltip;
         // #4886, MS Touch end fires mouseleave but with no related target
         if (chart && (e.relatedTarget || e.toElement)) {
             chart.pointer.reset();
             // Also reset the chart position, used in #149 fix
             chart.pointer.chartPosition = void 0;
+        }
+        if ( // #11635, Firefox wheel scroll does not fire out events consistently
+        tooltip &&
+            !tooltip.isHidden) {
+            this.reset();
         }
     };
     /**
@@ -892,11 +898,7 @@ var Pointer = /** @class */ (function () {
      */
     Pointer.prototype.onContainerMouseMove = function (e) {
         var chart = this.chart;
-        if (!defined(H.hoverChartIndex) ||
-            !charts[H.hoverChartIndex] ||
-            !charts[H.hoverChartIndex].mouseIsDown) {
-            H.hoverChartIndex = chart.index;
-        }
+        this.setHoverChartIndex();
         e = this.normalize(e);
         // In IE8 we apparently need this returnValue set to false in order to
         // avoid text being selected. But in Chrome, e.returnValue is prevented,
@@ -1445,6 +1447,25 @@ var Pointer = /** @class */ (function () {
         }
     };
     /**
+     * Sets the index of the hovered chart and leaves the previous hovered
+     * chart, to reset states like tooltip.
+     *
+     * @private
+     * @function Highcharts.Pointer#setHoverChartIndex
+     */
+    Pointer.prototype.setHoverChartIndex = function () {
+        var chart = this.chart;
+        var hoverChart = H.charts[H.hoverChartIndex || -1];
+        if (hoverChart &&
+            hoverChart.index !== chart.index) {
+            hoverChart.pointer.onContainerMouseLeave({ relatedTarget: true });
+        }
+        if (!hoverChart ||
+            !hoverChart.mouseIsDown) {
+            H.hoverChartIndex = chart.index;
+        }
+    };
+    /**
      * General touch handler shared by touchstart and touchmove.
      *
      * @private
@@ -1458,10 +1479,7 @@ var Pointer = /** @class */ (function () {
      */
     Pointer.prototype.touch = function (e, start) {
         var chart = this.chart, hasMoved, pinchDown, isInside;
-        if (chart.index !== H.hoverChartIndex) {
-            this.onContainerMouseLeave({ relatedTarget: true });
-        }
-        H.hoverChartIndex = chart.index;
+        this.setHoverChartIndex();
         if (e.touches.length === 1) {
             e = this.normalize(e);
             isInside = chart.isInsidePlot(e.chartX - chart.plotLeft, e.chartY - chart.plotTop);

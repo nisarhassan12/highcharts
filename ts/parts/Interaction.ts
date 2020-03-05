@@ -301,7 +301,7 @@ TrackerMixin = H.TrackerMixin = {
                     chart.hoverSeries !== series &&
                     !pointer.isStickyTooltip(e)
                 ) {
-                    (series as any).onMouseOver();
+                    series.onMouseOver();
                 }
             },
             /*
@@ -1037,6 +1037,8 @@ extend(Point.prototype, /** @lends Highcharts.Point.prototype */ {
             pointer.normalize(e) :
             // In cases where onMouseOver is called directly without an event
             pointer.getChartCoordinatesFromPoint(point, chart.inverted) as any;
+
+        pointer.setHoverChartIndex();
         pointer.runPointActions(e, point);
     },
 
@@ -1392,7 +1394,10 @@ extend(Series.prototype, /** @lends Highcharts.Series.prototype */ {
     onMouseOver: function (this: Highcharts.Series): void {
         var series = this,
             chart = series.chart,
-            hoverSeries = chart.hoverSeries;
+            hoverSeries = chart.hoverSeries,
+            pointer = chart.pointer;
+
+        pointer.setHoverChartIndex();
 
         // set normal state to previous series
         if (hoverSeries && hoverSeries !== series) {

@@ -643,6 +643,7 @@ extend(Point.prototype, /** @lends Highcharts.Point.prototype */ {
             pointer.normalize(e) :
             // In cases where onMouseOver is called directly without an event
             pointer.getChartCoordinatesFromPoint(point, chart.inverted);
+        pointer.setHoverChartIndex();
         pointer.runPointActions(e, point);
     },
     /**
@@ -870,7 +871,8 @@ extend(Series.prototype, /** @lends Highcharts.Series.prototype */ {
      * @fires Highcharts.Series#event:mouseOver
      */
     onMouseOver: function () {
-        var series = this, chart = series.chart, hoverSeries = chart.hoverSeries;
+        var series = this, chart = series.chart, hoverSeries = chart.hoverSeries, pointer = chart.pointer;
+        pointer.setHoverChartIndex();
         // set normal state to previous series
         if (hoverSeries && hoverSeries !== series) {
             hoverSeries.onMouseOut();

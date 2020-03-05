@@ -1,17 +1,15 @@
 QUnit.test('Wheel scroll with middle click should hide tooltip (#11635)', function (assert) {
 
     var body = document.body,
-        container1 = document.createElement('div'),
+        container1 = document.getElementById('container'),
         container2 = document.createElement('div');
 
-    container1.setAttribute('id', 'container1');
     container1.style.position = 'absolute';
     container1.style.left = '0px';
     container1.style.top = '0px';
     container1.style.width = '400px';
     container1.style.height = '400px';
     container1.style.zIndex = 1;
-    body.appendChild(container1);
 
     container2.setAttribute('id', 'container2');
     container2.style.position = container1.style.position;
@@ -31,8 +29,8 @@ QUnit.test('Wheel scroll with middle click should hide tooltip (#11635)', functi
                 data: [3, 2, 1]
             }]
         },
-        chart1 = Highcharts.chart(container1, chartOptions),
-        chart2 = Highcharts.chart(container2, chartOptions);
+        chart1 = Highcharts.chart('container', chartOptions),
+        chart2 = Highcharts.chart('container2', chartOptions);
 
     try {
 
@@ -97,13 +95,11 @@ QUnit.test('Wheel scroll with middle click should hide tooltip (#11635)', functi
         assert.strictEqual(
             !chart2.tooltip.isHidden,
             true,
-            'Tooltip of second chart should be not hidden.'
+            'Tooltip of second chart should not be hidden.'
         );
 
     } finally {
-        chart1.destroy();
         chart2.destroy();
-        body.removeChild(container1);
         body.removeChild(container2);
     }
 });

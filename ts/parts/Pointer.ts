@@ -161,6 +161,7 @@ declare global {
                 clip?: boolean
             ): void;
             public setDOMEvents(): void;
+            public setHoverChartIndex(): void;
             public touch: (e: PointerEventObject, start?: boolean) => void;
             public zoomOption(e: Event): void;
         }
@@ -1372,13 +1373,21 @@ class Pointer {
      * @return {void}
      */
     public onContainerMouseLeave(e: Highcharts.PointerEventObject): void {
-        var chart = charts[H.hoverChartIndex as any];
+        const chart = charts[H.hoverChartIndex || -1];
+        const tooltip = this.chart.tooltip;
 
         // #4886, MS Touch end fires mouseleave but with no related target
         if (chart && (e.relatedTarget || e.toElement)) {
             chart.pointer.reset();
             // Also reset the chart position, used in #149 fix
             chart.pointer.chartPosition = void 0;
+        }
+
+        if ( // #11635, Firefox wheel scroll does not fire out events consistently
+            tooltip &&
+            !tooltip.isHidden
+        ) {
+            this.reset();
         }
     }
 
@@ -1393,16 +1402,9 @@ class Pointer {
      * @return {void}
      */
     public onContainerMouseMove(e: Highcharts.PointerEventObject): void {
+        const chart = this.chart;
 
-        var chart = this.chart;
-
-        if (
-            !defined(H.hoverChartIndex) ||
-            !charts[H.hoverChartIndex as any] ||
-            !(charts[H.hoverChartIndex as any] as any).mouseIsDown
-        ) {
-            H.hoverChartIndex = chart.index;
-        }
+        this.setHoverChartIndex();
 
         e = this.normalize(e);
 
@@ -2213,6 +2215,32 @@ class Pointer {
     }
 
     /**
+     * Sets the index of the hovered chart and leaves the previous hovered
+     * chart, to reset states like tooltip.
+     *
+     * @private
+     * @function Highcharts.Pointer#setHoverChartIndex
+     */
+    public setHoverChartIndex(): void {
+        const chart = this.chart;
+        const hoverChart = H.charts[H.hoverChartIndex || -1];
+
+        if (
+            hoverChart &&
+            hoverChart.index !== chart.index
+        ) {
+            hoverChart.pointer.onContainerMouseLeave({ relatedTarget: true } as any);
+        }
+
+        if (
+            !hoverChart ||
+            !hoverChart.mouseIsDown
+        ) {
+            H.hoverChartIndex = chart.index;
+        }
+    }
+
+    /**
      * General touch handler shared by touchstart and touchmove.
      *
      * @private
@@ -2230,10 +2258,7 @@ class Pointer {
             pinchDown,
             isInside;
 
-        if (chart.index !== H.hoverChartIndex) {
-            this.onContainerMouseLeave({ relatedTarget: true } as any);
-        }
-        H.hoverChartIndex = chart.index;
+        this.setHoverChartIndex();
 
         if ((e as any).touches.length === 1) {
 
